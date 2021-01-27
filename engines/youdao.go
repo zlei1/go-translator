@@ -4,16 +4,16 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"io"
 	"os"
 	"strconv"
 	"time"
 
-	"github.com/spf13/viper"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -65,9 +65,11 @@ type YoudaoTranslator struct {
 }
 
 func readConfigFile() *YoudaoConfig {
-	viper.AddConfigPath("config/")
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
+
+	viper.AddConfigPath("/etc/go-translator/")
+	viper.AddConfigPath("./config/")
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -128,14 +130,14 @@ func NewYoudaoTranslator(sl, tl, word string) *YoudaoTranslator {
 	sign := generateSign(config.AppKey, config.AppSecret, word, u1, stamp_str)
 
 	return &YoudaoTranslator{
-		Q: word,
-		From: sl,
-		To: tl,
-		AppKey: config.AppKey,
-		Salt: u1,
-		Sign: sign,
+		Q:        word,
+		From:     sl,
+		To:       tl,
+		AppKey:   config.AppKey,
+		Salt:     u1,
+		Sign:     sign,
 		SignType: "v3",
-		Curtime: stamp_str,
+		Curtime:  stamp_str,
 	}
 }
 
