@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -11,20 +11,30 @@ import (
 )
 
 var (
-	sl string
-	tl string
-	engine string
+	sl      string
+	tl      string
+	engine  string
 	rootCmd = &cobra.Command{
 		Use:   "go-translator {word}",
 		Short: "translate words",
 		Long:  `translate words to other language by cmdline`,
-		Args: cobra.MinimumNArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			words := strings.Join(args, " ")
 			switch {
-			case engine == "youdao" :
+			case engine == "youdao":
 				yd := engines.NewYoudaoTranslator(sl, tl, words)
 				err := yd.Perform()
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err)
+				}
+			case engine == "baidu":
+				if tl == "auto" {
+					tl = "zh"
+				}
+
+				bd := engines.NewBaiduTranslator(sl, tl, words)
+				err := bd.Perform()
 				if err != nil {
 					fmt.Fprintln(os.Stderr, err)
 				}

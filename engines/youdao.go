@@ -13,17 +13,11 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
-	"github.com/spf13/viper"
 )
 
 const (
 	apiURL = "https://openapi.youdao.com/api"
 )
-
-type YoudaoConfig struct {
-	AppKey    string `mapstructure:"youdao_app_key"`
-	AppSecret string `mapstructure:"youdao_app_secret"`
-}
 
 type ResponseWeb struct {
 	Key   string   `json:"key"`
@@ -62,29 +56,6 @@ type YoudaoTranslator struct {
 	Sign     string `json:"sign"`
 	SignType string `json:"signType"`
 	Curtime  string `json:"curtime"`
-}
-
-func readConfigFile() *YoudaoConfig {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-
-	viper.AddConfigPath("/etc/go-translator/")
-	viper.AddConfigPath("./config/")
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(0)
-	}
-
-	config := new(YoudaoConfig)
-	err = viper.Unmarshal(config)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(0)
-	}
-
-	return config
 }
 
 func generateSign(app_key, app_secret, word, u1, stamp string) string {
@@ -127,13 +98,13 @@ func NewYoudaoTranslator(sl, tl, word string) *YoudaoTranslator {
 	u1 := uuid.NewV4().String()
 	stamp := time.Now().Unix()
 	stamp_str := strconv.FormatInt(stamp, 10)
-	sign := generateSign(config.AppKey, config.AppSecret, word, u1, stamp_str)
+	sign := generateSign(config.YoudaoAppKey, config.YoudaoAppSecret, word, u1, stamp_str)
 
 	return &YoudaoTranslator{
 		Q:        word,
 		From:     sl,
 		To:       tl,
-		AppKey:   config.AppKey,
+		AppKey:   config.YoudaoAppKey,
 		Salt:     u1,
 		Sign:     sign,
 		SignType: "v3",
@@ -174,9 +145,9 @@ func (yd *YoudaoTranslator) Perform() error {
 
 func console(resp *Response, w io.Writer) {
 	if resp.ErrorCode != "0" {
-		fmt.Fprintln(w, "服务调用失败")
 		os.Exit(0)
 	}
+
 	fmt.Fprintln(w, "@", resp.Query)
 
 	if resp.Basic.UkPhonetic != "" {
